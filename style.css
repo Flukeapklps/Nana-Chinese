@@ -3,7 +3,7 @@ body {
     font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f4f9;
+    background-color: #fce4ec; /* Pale pink background */
     color: #333;
 }
 
@@ -15,7 +15,7 @@ body {
 
 /* Header Styles */
 header {
-    background-color: #4CAF50;
+    background-color: #f06292; /* Pale pink header */
     color: white;
     padding: 20px;
     text-align: center;
@@ -69,7 +69,7 @@ main {
 
 .highlight {
     font-size: 28px;
-    color: #4CAF50;
+    color: #f06292; /* Pale pink highlight */
 }
 
 .description {
@@ -80,7 +80,7 @@ main {
 
 .btn {
     padding: 10px 20px;
-    background-color: #4CAF50;
+    background-color: #f06292; /* Pale pink button */
     color: white;
     font-weight: bold;
     text-decoration: none;
@@ -89,13 +89,13 @@ main {
 }
 
 .btn:hover {
-    background-color: #45a049;
+    background-color: #ec407a; /* Darker pink on hover */
 }
 
 /* New Button Box Styles */
 .btn-box {
     padding: 15px 30px;
-    background-color: #4CAF50;
+    background-color: #f06292; /* Pale pink box */
     color: white;
     font-size: 20px;
     font-weight: bold;
@@ -106,7 +106,7 @@ main {
 }
 
 .btn-box:hover {
-    background-color: #45a049;
+    background-color: #ec407a;
     transform: scale(1.05);
 }
 
@@ -126,7 +126,7 @@ main {
 
 .course-box h3 {
     font-size: 24px;
-    color: #333;
+    color: #f06292; /* Pale pink course heading */
     margin-bottom: 10px;
 }
 
@@ -137,7 +137,7 @@ main {
 }
 
 .course-box .btn {
-    background-color: #4CAF50;
+    background-color: #f06292;
     padding: 10px 20px;
     color: white;
     font-weight: bold;
@@ -147,7 +147,7 @@ main {
 }
 
 .course-box .btn:hover {
-    background-color: #45a049;
+    background-color: #ec407a;
 }
 
 /* Contact Info Section */
@@ -159,6 +159,7 @@ main {
 .contact-info h3 {
     font-size: 24px;
     margin-bottom: 10px;
+    color: #f06292; /* Pale pink contact heading */
 }
 
 .contact-info p {
@@ -168,7 +169,7 @@ main {
 
 .contact-info a {
     text-decoration: none;
-    color: #4CAF50;
+    color: #f06292; /* Pale pink link */
     font-size: 16px;
 }
 
@@ -188,7 +189,7 @@ footer {
 }
 
 footer a {
-    color: #4CAF50;
+    color: #f06292; /* Pale pink footer link */
     text-decoration: none;
 }
 
