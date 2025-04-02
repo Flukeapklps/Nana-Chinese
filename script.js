@@ -1,53 +1,29 @@
-// Smooth Scrolling for Navigation Links
-document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-            behavior: 'smooth'
-        });
-    });
-});
-
-// Modal for Course Details
-const courseBtn = document.querySelector('.btn');
-const modal = document.createElement('div');
-modal.classList.add('modal');
-modal.innerHTML = `
+// Modal for Course Enrollment Confirmation
+const enrollButton = document.getElementById('enrollButton');
+const confirmationModal = document.createElement('div');
+confirmationModal.className = 'modal';
+confirmationModal.innerHTML = `
     <div class="modal-content">
-        <span class="close-btn">&times;</span>
-        <h2>Course Details</h2>
-        <p>Here you can view course information, pricing, schedules, and much more...</p>
-        <button class="btn">Enroll Now</button>
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Enrollment Successful</h2>
+        <p>Thank you for enrolling in the course! You will receive an email with further instructions.</p>
+        <button onclick="closeModal()">Close</button>
     </div>
 `;
+document.body.appendChild(confirmationModal);
 
-document.body.appendChild(modal);
-
-courseBtn.addEventListener('click', () => {
-    modal.style.display = 'block';
+// Enroll Button Functionality
+enrollButton.addEventListener('click', () => {
+    confirmationModal.style.display = 'block';
 });
 
-const closeModal = document.querySelector('.close-btn');
-closeModal.addEventListener('click', () => {
-    modal.style.display = 'none';
-});
+function closeModal() {
+    confirmationModal.style.display = 'none';
+}
 
-// Event listener for close modal if clicked outside modal
+// Close modal if user clicks outside
 window.addEventListener('click', (e) => {
-    if (e.target === modal) {
-        modal.style.display = 'none';
+    if (e.target === confirmationModal) {
+        confirmationModal.style.display = 'none';
     }
 });
-
-// Simple Form Validation Example (Uncomment to use if forms are added in the future)
-// const form = document.querySelector('form');
-// form.addEventListener('submit', (e) => {
-//     e.preventDefault();
-//     const name = document.querySelector('input[name="name"]').value;
-//     if (!name) {
-//         alert('Name is required!');
-//     } else {
-//         alert('Form submitted!');
-//     }
-// });
