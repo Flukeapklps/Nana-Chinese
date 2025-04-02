@@ -13,6 +13,7 @@ body {
     padding: 20px;
 }
 
+/* Header Styles */
 header {
     background-color: #4CAF50;
     color: white;
@@ -109,6 +110,75 @@ main {
     transform: scale(1.05);
 }
 
+/* Course Section */
+.course-details {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.course-box {
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.course-box h3 {
+    font-size: 24px;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.course-box p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.course-box .btn {
+    background-color: #4CAF50;
+    padding: 10px 20px;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+    text-decoration: none;
+}
+
+.course-box .btn:hover {
+    background-color: #45a049;
+}
+
+/* Contact Info Section */
+.contact-info {
+    margin-top: 40px;
+    text-align: center;
+}
+
+.contact-info h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.contact-info p {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.contact-info a {
+    text-decoration: none;
+    color: #4CAF50;
+    font-size: 16px;
+}
+
+.social-logo {
+    width: 20px;
+    height: 20px;
+    margin-right: 10px;
+    vertical-align: middle;
+}
+
 /* Footer Styles */
 footer {
     text-align: center;
@@ -126,48 +196,21 @@ footer a:hover {
     text-decoration: underline;
 }
 
-/* Course Box Styles */
-.course-box {
-    background-color: #fff;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: transform 0.3s;
-}
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .course-box {
+        padding: 15px;
+    }
 
-.course-box h3 {
-    font-size: 24px;
-    color: #333;
-    margin-bottom: 10px;
-}
+    .course-box h3 {
+        font-size: 20px;
+    }
 
-.course-box p {
-    font-size: 16px;
-    color: #555;
-}
+    .course-box p {
+        font-size: 14px;
+    }
 
-.course-box .btn {
-    margin-top: 15px;
-    background-color: #FF9800;
-    color: white;
-    font-weight: bold;
-    padding: 12px 25px;
-    border-radius: 5px;
-    transition: background-color 0.3s;
-}
-
-.course-box .btn:hover {
-    background-color: #FF5722;
-    transform: scale(1.05);
-}
-
-/* Course Page Specific Styles */
-.course-details {
-    margin-top: 30px;
-}
-
-/* Ensures course sections look spaced and organized */
-.course-box:last-child {
-    margin-bottom: 0;
+    .contact-info a {
+        font-size: 14px;
+    }
 }
