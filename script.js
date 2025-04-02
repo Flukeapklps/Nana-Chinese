@@ -1,29 +1,42 @@
-// Modal for Course Enrollment Confirmation
-const enrollButton = document.getElementById('enrollButton');
-const confirmationModal = document.createElement('div');
-confirmationModal.className = 'modal';
-confirmationModal.innerHTML = `
-    <div class="modal-content">
-        <span class="close" onclick="closeModal()">&times;</span>
-        <h2>Enrollment Successful</h2>
-        <p>Thank you for enrolling in the course! You will receive an email with further instructions.</p>
-        <button onclick="closeModal()">Close</button>
-    </div>
-`;
-document.body.appendChild(confirmationModal);
+// Wait for the DOM to load
+document.addEventListener('DOMContentLoaded', () => {
 
-// Enroll Button Functionality
-enrollButton.addEventListener('click', () => {
-    confirmationModal.style.display = 'block';
-});
+    // Handling Enroll Now button click
+    const enrollButtons = document.querySelectorAll('.btn');
+    enrollButtons.forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const courseName = event.target.closest('.course-box').querySelector('h3').textContent;
+            alert(`You have enrolled in the ${courseName}!`);
+        });
+    });
 
-function closeModal() {
-    confirmationModal.style.display = 'none';
-}
+    // Simple contact form validation
+    const contactForm = document.querySelector('#contactForm');
+    if (contactForm) {
+        contactForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const name = document.querySelector('#name').value;
+            const email = document.querySelector('#email').value;
+            const message = document.querySelector('#message').value;
 
-// Close modal if user clicks outside
-window.addEventListener('click', (e) => {
-    if (e.target === confirmationModal) {
-        confirmationModal.style.display = 'none';
+            if (name && email && message) {
+                alert('Your message has been sent!');
+                contactForm.reset();
+            } else {
+                alert('Please fill out all fields.');
+            }
+        });
     }
+
+    // Dynamic course content toggle
+    const courseDetailsBtns = document.querySelectorAll('.btn');
+    courseDetailsBtns.forEach(button => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const courseName = event.target.closest('.course-box').querySelector('h3').textContent;
+            alert(`You have selected the ${courseName} for further details.`);
+        });
+    });
 });
+
