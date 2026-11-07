@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HSK 2–3 Trainer</title>
+<style>
+:root{--bg:#faf8f4;--card:#fff;--tx:#222;--mut:#777;--pri:#4a7fd4;--ok:#3fae6a;--warn:#f0913a;--bad:#e05252;--bd:#e8e4dc}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans Thai","Noto Sans SC",sans-serif;background:var(--bg);color:var(--tx)}
+#app{display:flex;min-height:100vh}
+nav{width:200px;background:#fff;border-right:1px solid var(--bd);padding:16px 8px;position:sticky;top:0;height:100vh}
+nav h1{font-size:18px;margin:4px 10px 16px;color:var(--pri)}
+nav button{display:block;width:100%;text-align:left;border:0;background:none;padding:10px 12px;border-radius:10px;font-size:15px;cursor:pointer;color:var(--tx)}
+nav button.on{background:#e9f0fb;color:var(--pri);font-weight:600}
+main{flex:1;padding:24px;max-width:1000px;margin:auto;width:100%}
+.card{background:var(--card);border-radius:16px;box-shadow:0 2px 10px #0000000d;padding:18px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat b{display:block;font-size:28px;color:var(--pri)}.stat span{color:var(--mut);font-size:13px}
+.btn{border:0;background:var(--pri);color:#fff;padding:10px 16px;border-radius:10px;cursor:pointer;font-size:15px;margin:4px 4px 4px 0}
+.btn.g{background:#eee;color:var(--tx)}.btn.ok{background:var(--ok)}.btn.w{background:var(--warn)}.btn.r{background:var(--bad)}
+.bar{height:10px;background:#eee;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+input,select,textarea{padding:9px;border:1px solid var(--bd);border-radius:10px;font-size:15px;font-family:inherit}
+table{width:100%;border-collapse:collapse}td,th{padding:8px;border-bottom:1px solid var(--bd);text-align:left;vertical-align:top}
+.hz{font-size:22px;font-family:"Noto Sans SC",sans-serif}.py{color:var(--pri)}.th{color:#444}.mut{color:var(--mut);font-size:13px}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:9px;background:#eef;margin:2px}
+.fc{min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;user-select:none;transition:transform .2s}
+.fc .big{font-size:72px}
+.ex{background:#f6f4ef;border-radius:10px;padding:10px;margin:8px 0;text-align:left}.ex mark{background:#ffe08a}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;padding:12px;border:1px solid var(--bd);background:#fff;border-radius:10px;cursor:pointer;font-size:16px}
+.opt.c{background:#e3f6ea;border-color:var(--ok)}.opt.x{background:#fde6e6;border-color:var(--bad)}
+.chip{display:inline-block;padding:8px 12px;margin:4px;border-radius:10px;background:#e9f0fb;cursor:pointer;font-size:20px}
+.spk{border:0;background:none;cursor:pointer;font-size:18px}
+@media(max-width:700px){#app{flex-direction:column}nav{position:fixed;bottom:0;top:auto;height:auto;width:100%;display:flex;overflow-x:auto;padding:4px;border-right:0;border-top:1px solid var(--bd);z-index:9}nav h1{display:none}nav button{font-size:12px;padding:8px;text-align:center;white-space:nowrap}main{padding:14px 14px 80px}.fc .big{font-size:56px}}
+</style>
+</head>
+<body>
+<div id="app">
+<nav id="nav"><h1>🀄 HSK Trainer</h1></nav>
+<main id="main"></main>
+</div>
+<script>
+// ===== Vocabulary: [hanzi, pinyin, thai, english, level, pos, group, exCN, exPY, exTH, tip]
+// Sample list for practice (HSK 2.0 style levels). Please verify against the official list.
+const RAW=[
+["爸爸","bàba","พ่อ","father",1,"n","ครอบครัว","我爸爸是医生。","Wǒ bàba shì yīshēng.","พ่อของฉันเป็นหมอ",""],
+["妈妈","māma","แม่","mother",1,"n","ครอบครัว","妈妈在做饭。","Māma zài zuò fàn.","แม่กำลังทำอาหาร",""],
+["哥哥","gēge","พี่ชาย","older brother",2,"n","ครอบครัว","我哥哥很高。","Wǒ gēge hěn gāo.","พี่ชายฉันสูงมาก",""],
+["弟弟","dìdi","น้องชาย","younger brother",2,"n","ครอบครัว","弟弟喜欢踢足球。","Dìdi xǐhuan tī zúqiú.","น้องชายชอบเตะฟุตบอล",""],
+["姐姐","jiějie","พี่สาว","older sister",2,"n","ครอบครัว","姐姐在大学学习。","Jiějie zài dàxué xuéxí.","พี่สาวเรียนที่มหาวิทยาลัย",""],
+["妹妹","mèimei","น้องสาว","younger sister",2,"n","ครอบครัว","我妹妹八岁。","Wǒ mèimei bā suì.","น้องสาวฉันอายุแปดขวบ",""],
+["学习","xuéxí","เรียน","to study",1,"v","การศึกษา","我每天学习汉语。","Wǒ měitiān xuéxí Hànyǔ.","ฉันเรียนภาษาจีนทุกวัน","学=เรียน 习=ฝึก → เรียนและฝึก"],
+["学生","xuésheng","นักเรียน","student",1,"n","การศึกษา","他是一个好学生。","Tā shì yí ge hǎo xuésheng.","เขาเป็นนักเรียนที่ดี","学=เรียน 生=คน → คนที่เรียน"],
+["学校","xuéxiào","โรงเรียน","school",1,"n","การศึกษา","我每天去学校。","Wǒ měitiān qù xuéxiào.","ฉันไปโรงเรียนทุกวัน","学=เรียน 校=โรงเรียน"],
+["大学","dàxué","มหาวิทยาลัย","university",3,"n","การศึกษา","她在北京上大学。","Tā zài Běijīng shàng dàxué.","เธอเรียนมหาวิทยาลัยที่ปักกิ่ง","大=ใหญ่ 学=เรียน → ที่เรียนใหญ่"],
+["老师","lǎoshī","ครู","teacher",1,"n","การศึกษา","老师说得很慢。","Lǎoshī shuō de hěn màn.","ครูพูดช้ามาก",""],
+["同学","tóngxué","เพื่อนร่วมชั้น","classmate",1,"n","การศึกษา","他是我的同学。","Tā shì wǒ de tóngxué.","เขาเป็นเพื่อนร่วมชั้นของฉัน","同=เหมือนกัน 学=เรียน"],
+["考试","kǎoshì","สอบ","exam",2,"n/v","การศึกษา","明天有汉语考试。","Míngtiān yǒu Hànyǔ kǎoshì.","พรุ่งนี้มีสอบภาษาจีน",""],
+["米饭","mǐfàn","ข้าวสวย","cooked rice",1,"n","อาหาร","我想吃米饭。","Wǒ xiǎng chī mǐfàn.","ฉันอยากกินข้าวสวย",""],
+["面条","miàntiáo","บะหมี่","noodles",2,"n","อาหาร","我早上吃面条。","Wǒ zǎoshang chī miàntiáo.","ฉันกินบะหมี่ตอนเช้า",""],
+["水果","shuǐguǒ","ผลไม้","fruit",1,"n","อาหาร","多吃水果对身体好。","Duō chī shuǐguǒ duì shēntǐ hǎo.","กินผลไม้เยอะดีต่อร่างกาย","水=น้ำ 果=ผล → ผลไม้ฉ่ำน้ำ"],
+["苹果","píngguǒ","แอปเปิล","apple",1,"n","อาหาร","这个苹果很甜。","Zhège píngguǒ hěn tián.","แอปเปิลลูกนี้หวานมาก",""],
+["牛奶","niúnǎi","นม","milk",2,"n","อาหาร","我每天喝牛奶。","Wǒ měitiān hē niúnǎi.","ฉันดื่มนมทุกวัน","牛=วัว 奶=นม"],
+["咖啡","kāfēi","กาแฟ","coffee",2,"n","อาหาร","我喜欢喝咖啡。","Wǒ xǐhuan hē kāfēi.","ฉันชอบดื่มกาแฟ",""],
+["喜欢","xǐhuan","ชอบ","to like",1,"v","ความรู้สึก","我喜欢喝咖啡。","Wǒ xǐhuan hē kāfēi.","ฉันชอบดื่มกาแฟ",""],
+["觉得","juéde","รู้สึก/คิดว่า","to feel; think",2,"v","ความรู้สึก","我觉得这本书很有意思。","Wǒ juéde zhè běn shū hěn yǒu yìsi.","ฉันรู้สึกว่าหนังสือเล่มนี้น่าสนใจ","ใช้กับความรู้สึกส่วนตัว"],
+["认为","rènwéi","เห็นว่า/ถือว่า","to consider",3,"v","ความรู้สึก","我认为这个办法很好。","Wǒ rènwéi zhège bànfǎ hěn hǎo.","ฉันเห็นว่าวิธีนี้ดีมาก","ทางการกว่า 觉得"],
+["知道","zhīdào","รู้","to know (fact)",2,"v","ความรู้สึก","我知道他的名字。","Wǒ zhīdào tā de míngzi.","ฉันรู้ชื่อของเขา","รู้ข้อมูล"],
+["认识","rènshi","รู้จัก","to know (person)",1,"v","ความรู้สึก","很高兴认识你。","Hěn gāoxìng rènshi nǐ.","ยินดีที่ได้รู้จัก","รู้จักคน/สถานที่"],
+["漂亮","piàoliang","สวย","pretty",1,"adj","ลักษณะ","你的衣服很漂亮。","Nǐ de yīfu hěn piàoliang.","เสื้อของคุณสวยมาก",""],
+["好看","hǎokàn","ดูดี/สวย","good-looking",3,"adj","ลักษณะ","这个电影很好看。","Zhège diànyǐng hěn hǎokàn.","หนังเรื่องนี้สนุก/น่าดู","好=ดี 看=ดู → ดูดี"],
+["大","dà","ใหญ่","big",1,"adj","ลักษณะ","这个房间很大。","Zhège fángjiān hěn dà.","ห้องนี้ใหญ่มาก",""],
+["小","xiǎo","เล็ก","small",1,"adj","ลักษณะ","我的狗很小。","Wǒ de gǒu hěn xiǎo.","หมาของฉันตัวเล็กมาก",""],
+["多","duō","มาก","many",1,"adj","ลักษณะ","这里人很多。","Zhèlǐ rén hěn duō.","ที่นี่คนเยอะมาก",""],
+["少","shǎo","น้อย","few",1,"adj","ลักษณะ","今天人很少。","Jīntiān rén hěn shǎo.","วันนี้คนน้อยมาก",""],
+["快","kuài","เร็ว","fast",2,"adj","ลักษณะ","他跑得很快。","Tā pǎo de hěn kuài.","เขาวิ่งเร็วมาก",""],
+["慢","màn","ช้า","slow",2,"adj","ลักษณะ","请说慢一点。","Qǐng shuō màn yìdiǎn.","กรุณาพูดช้าลงหน่อย",""],
+["早","zǎo","เช้า/เร็ว","early",2,"adj","เวลา","你今天来得很早。","Nǐ jīntiān lái de hěn zǎo.","วันนี้คุณมาเช้ามาก",""],
+["晚","wǎn","สาย/ดึก","late",2,"adj","เวลา","太晚了，我们回家吧。","Tài wǎn le, wǒmen huí jiā ba.","ดึกแล้ว กลับบ้านกันเถอะ",""],
+["贵","guì","แพง","expensive",2,"adj","การซื้อของ","这件衣服太贵了。","Zhè jiàn yīfu tài guì le.","เสื้อตัวนี้แพงเกินไป",""],
+["便宜","piányi","ถูก","cheap",2,"adj","การซื้อของ","这个很便宜。","Zhège hěn piányi.","อันนี้ถูกมาก",""],
+["看见","kànjiàn","เห็น","to see",1,"v","การกระทำ","我看见他了。","Wǒ kànjiàn tā le.","ฉันเห็นเขาแล้ว","看=ดู 见=เห็น"],
+["看书","kàn shū","อ่านหนังสือ","to read",1,"v","การกระทำ","我喜欢看书。","Wǒ xǐhuan kàn shū.","ฉันชอบอ่านหนังสือ",""],
+["看病","kàn bìng","ไปหาหมอ","see a doctor",3,"v","การกระทำ","我要去医院看病。","Wǒ yào qù yīyuàn kàn bìng.","ฉันต้องไปหาหมอที่โรงพยาบาล",""],
+["可以","kěyǐ","สามารถ/ได้ (อนุญาต)","can; may",2,"aux","คำช่วย","这里可以拍照吗？","Zhèlǐ kěyǐ pāizhào ma?","ที่นี่ถ่ายรูปได้ไหม","เน้นการอนุญาต"],
+["能","néng","สามารถ (ความสามารถ/เงื่อนไข)","can; able",1,"aux","คำช่วย","我明天能来。","Wǒ míngtiān néng lái.","พรุ่งนี้ฉันมาได้","เน้นความสามารถ/เงื่อนไข"],
+["会","huì","เป็น/ทำได้ (ที่เรียนมา)","can (learned skill)",1,"aux","คำช่วย","我会说汉语。","Wǒ huì shuō Hànyǔ.","ฉันพูดภาษาจีนได้","ทักษะที่เรียนมา"],
+["二","èr","สอง (ตัวเลข)","two (number)",1,"num","ตัวเลข","我住在二楼。","Wǒ zhù zài èr lóu.","ฉันอยู่ชั้นสอง","ใช้นับเลข/ลำดับ"],
+["两","liǎng","สอง (+ลักษณนาม)","two (with MW)",2,"num","ตัวเลข","我有两本书。","Wǒ yǒu liǎng běn shū.","ฉันมีหนังสือสองเล่ม","ใช้หน้าลักษณนาม"],
+["医院","yīyuàn","โรงพยาบาล","hospital",1,"n","สถานที่","医院在哪儿？","Yīyuàn zài nǎr?","โรงพยาบาลอยู่ที่ไหน",""],
+["机场","jīchǎng","สนามบิน","airport",2,"n","สถานที่","我去机场接朋友。","Wǒ qù jīchǎng jiē péngyou.","ฉันไปรับเพื่อนที่สนามบิน","机=เครื่องบิน 场=ลาน"],
+["宾馆","bīnguǎn","โรงแรม","hotel",2,"n","สถานที่","这家宾馆很干净。","Zhè jiā bīnguǎn hěn gānjìng.","โรงแรมนี้สะอาดมาก",""],
+["旅游","lǚyóu","ท่องเที่ยว","to travel",2,"v","การกระทำ","我们去中国旅游吧。","Wǒmen qù Zhōngguó lǚyóu ba.","ไปเที่ยวจีนกันเถอะ",""],
+["准备","zhǔnbèi","เตรียม","to prepare",2,"v","การกระทำ","我在准备考试。","Wǒ zài zhǔnbèi kǎoshì.","ฉันกำลังเตรียมสอบ",""],
+["帮助","bāngzhù","ช่วยเหลือ","to help",2,"v","การกระทำ","谢谢你的帮助。","Xièxie nǐ de bāngzhù.","ขอบคุณสำหรับความช่วยเหลือ",""],
+["开始","kāishǐ","เริ่ม","to begin",2,"v","การกระทำ","电影七点开始。","Diànyǐng qī diǎn kāishǐ.","หนังเริ่มเจ็ดโมง",""],
+["已经","yǐjīng","แล้ว","already",2,"adv","คำช่วย","我已经吃饭了。","Wǒ yǐjīng chī fàn le.","ฉันกินข้าวแล้ว",""],
+["因为","yīnwèi","เพราะว่า","because",2,"conj","คำเชื่อม","因为下雨，所以我没去。","Yīnwèi xià yǔ, suǒyǐ wǒ méi qù.","เพราะฝนตก ฉันจึงไม่ไป","คู่กับ 所以"],
+["所以","suǒyǐ","ดังนั้น","so",2,"conj","คำเชื่อม","他病了，所以没来。","Tā bìng le, suǒyǐ méi lái.","เขาป่วย จึงไม่มา",""],
+["但是","dànshì","แต่","but",2,"conj","คำเชื่อม","很贵，但是很好。","Hěn guì, dànshì hěn hǎo.","แพง แต่ดีมาก",""],
+["环境","huánjìng","สิ่งแวดล้อม","environment",3,"n","ธรรมชาติ","这里的环境很好。","Zhèlǐ de huánjìng hěn hǎo.","สภาพแวดล้อมที่นี่ดีมาก",""],
+["关心","guānxīn","ใส่ใจ","to care about",3,"v","ความรู้สึก","妈妈很关心我。","Māma hěn guānxīn wǒ.","แม่ใส่ใจฉันมาก","关=เกี่ยวข้อง 心=ใจ"],
+["担心","dānxīn","กังวล","to worry",3,"v","ความรู้สึก","别担心，我没事。","Bié dānxīn, wǒ méi shì.","ไม่ต้องห่วง ฉันไม่เป็นไร","担=แบก 心=ใจ → แบกใจ"],
+["满意","mǎnyì","พอใจ","satisfied",3,"adj","ความรู้สึก","我对这个结果很满意。","Wǒ duì zhège jiéguǒ hěn mǎnyì.","ฉันพอใจกับผลลัพธ์นี้มาก",""],
+["练习","liànxí","ฝึกฝน","to practice",3,"v","การศึกษา","我每天练习写汉字。","Wǒ měitiān liànxí xiě Hànzì.","ฉันฝึกเขียนตัวจีนทุกวัน","练=ฝึก 习=ฝึก"],
+["复习","fùxí","ทบทวน","to review",3,"v","การศึกษา","考试前要复习。","Kǎoshì qián yào fùxí.","ก่อนสอบต้องทบทวน","复=ซ้ำ 习=ฝึก"],
+];
+const POS={n:"คำนาม",v:"กริยา",adj:"คุณศัพท์",adv:"กริยาวิเศษณ์",aux:"กริยานุเคราะห์",num:"ตัวเลข",conj:"คำเชื่อม","n/v":"นาม/กริยา"};
+const OPP=[["大","小"],["多","少"],["快","慢"],["早","晚"],["贵","便宜"]];
+const SIM=[{w:["漂亮","好看"],note:"漂亮 ใช้กับคน/สิ่งของที่สวย; 好看 = ดูดี ใช้กับหนัง/หนังสือได้ด้วย (สนุกน่าดู)"},{w:["学习","练习","复习"],note:"学习=เรียนรู้สิ่งใหม่, 练习=ฝึกซ้ำ, 复习=ทบทวนของเดิม"},{w:["关心","担心"],note:"关心=ใส่ใจ (บวก), 担心=กังวล (กลัวเกิดเรื่องไม่ดี)"}];
+const CONF=[{w:["觉得","认为"],note:"觉得 = ความรู้สึกส่วนตัว ภาษาพูด; 认为 = ความเห็นที่มีเหตุผล ทางการกว่า",err:"❌ 我认为很冷 → ✅ 我觉得很冷 (ความรู้สึกทางกาย)"},{w:["知道","认识"],note:"知道 = รู้ข้อมูล/ข้อเท็จจริง; 认识 = รู้จักคน สถานที่ ตัวอักษร",err:"❌ 我知道他 (ถ้าหมายถึงเคยพบ) → ✅ 我认识他"},{w:["可以","能","会"],note:"会 = ทักษะที่เรียนมา; 能 = มีความสามารถ/เงื่อนไขเอื้อ; 可以 = ได้รับอนุญาต",err:"❌ 我可以说汉语 (ทักษะ) → ✅ 我会说汉语"},{w:["二","两"],note:"二 ใช้นับเลข ลำดับ เบอร์; 两 ใช้หน้าลักษณนาม",err:"❌ 二个人 → ✅ 两个人"}];
+const V=RAW.map((r,i)=>({id:i,hz:r[0],py:r[1],th:r[2],en:r[3],lv:r[4],pos:r[5],grp:r[6],ex:{cn:r[7],py:r[8],th:r[9]},tip:r[10]}));
+const byHz=Object.fromEntries(V.map(w=>[w.hz,w]));
+
+// ===== State (localStorage)
+const KEY="hskTrainer";
+let S=JSON.parse(localStorage.getItem(KEY)||"null")||{p:{},memo:{},bm:{},log:{},exam:[],set:{daily:10,lv:"all"}};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(S));
+const today=()=>new Date().toISOString().slice(0,10);
+const P=id=>S.p[id]||(S.p[id]={n:0,ef:2.5,iv:0,due:null,ok:0,bad:0,last:null});
+const pool=()=>V.filter(w=>S.set.lv==="all"||(S.set.lv==="2"?w.lv<=2:w.lv===3));
+const learned=w=>!!(S.p[w.id]&&S.p[w.id].seen);
+const isDue=w=>learned(w)&&S.p[w.id].due<=today();
+const acc=w=>{const p=S.p[w.id];return p&&p.ok+p.bad?p.ok/(p.ok+p.bad):1};
+function logDay(k){const d=today();S.log[d]=S.log[d]||{rev:0,ok:0,bad:0};S.log[d][k]++;}
+// SM-2: q = 0 Again, 3 Hard, 4 Good, 5 Easy
+function grade(w,q){const p=P(w.id);p.seen=1;p.last=today();
+ if(q<3){p.n=0;p.iv=0;p.bad++}else{p.ok++;p.n++;p.iv=p.n===1?1:p.n===2?6:Math.round(p.iv*p.ef);if(q===5)p.iv=Math.round(p.iv*1.3)}
+ p.ef=Math.max(1.3,p.ef+0.1-(5-q)*(0.08+(5-q)*0.02));
+ const d=new Date();d.setDate(d.getDate()+p.iv);p.due=d.toISOString().slice(0,10);
+ logDay("rev");logDay(q<3?"bad":"ok");save();}
+const status=w=>{const p=S.p[w.id];if(!p||!p.seen)return["ใหม่","#999"];if(acc(w)<.6)return["ยาก","var(--bad)"];if(p.iv>=21)return["จำได้แล้ว","var(--ok)"];return["กำลังเรียน","var(--warn)"]};
+function streak(){let s=0,d=new Date();while(S.log[d.toISOString().slice(0,10)]){s++;d.setDate(d.getDate()-1)}return s}
+
+// ===== Helpers
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function say(t,rate){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang="zh-CN";u.rate=rate||S.set.rate||0.9;speechSynthesis.speak(u)}
+const spk=(t)=>`<button class="spk" onclick="event.stopPropagation();say('${t}')">🔊</button><button class="spk" title="ช้า" onclick="event.stopPropagation();say('${t}',.5)">🐢</button>`;
+const hl=(s,w)=>esc(s).split(w).join(`<mark>${w}</mark>`);
+const exBox=w=>`<div class="ex"><div class="hz" style="font-size:18px">${hl(w.ex.cn,w.hz)} ${spk(w.ex.cn)}</div><div class="py">${w.ex.py}</div><div class="th">${w.ex.th}</div></div>`;
+const shuffle=a=>a.map(x=>[Math.random(),x]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+const related=w=>V.filter(x=>x!==w&&([...w.hz].some(c=>x.hz.includes(c))||x.grp===w.grp)).slice(0,6);
+
+// ===== Pages
+const PAGES={dash:"📊 แดชบอร์ด",vocab:"📚 คำศัพท์",fc:"🃏 แฟลชการ์ด",grp:"🧩 กลุ่มคำ",memo:"📝 บันทึก",exam:"✍️ ฝึกสอบ",set:"⚙️ ตั้งค่า"};
+let cur="dash";
+function go(p){cur=p;document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.p===p));R[p]();scrollTo(0,0)}
+$("#nav").innerHTML+=Object.entries(PAGES).map(([k,v])=>`<button data-p="${k}" onclick="go('${k}')">${v}</button>`).join("");
+const R={};
+
+R.dash=()=>{const pl=pool(),L=pl.filter(learned).length,due=pl.filter(isDue).length;
+ const tot=Object.values(S.log).reduce((a,d)=>[a[0]+d.ok,a[1]+d.bad],[0,0]),ac=tot[0]+tot[1]?Math.round(tot[0]/(tot[0]+tot[1])*100):0;
+ const lvP=l=>{const a=V.filter(w=>l===2?w.lv<=2:w.lv===3);return Math.round(a.filter(learned).length/a.length*100)};
+ const days=[...Array(7)].map((_,i)=>{const d=new Date();d.setDate(d.getDate()-6+i);const k=d.toISOString().slice(0,10);return[k.slice(5),(S.log[k]||{}).rev||0]});
+ const mx=Math.max(1,...days.map(d=>d[1]));
+ const weak=V.filter(w=>S.p[w.id]&&S.p[w.id].bad>0).sort((a,b)=>acc(a)-acc(b)).slice(0,6);
+ const mast=pl.filter(w=>S.p[w.id]&&S.p[w.id].iv>=21).length;
+ $("#main").innerHTML=`<h2>สวัสดี! 你好 👋</h2>
+ <div class="grid">${[["คำศัพท์ทั้งหมด",pl.length],["เรียนแล้ว",L],["ยังไม่เรียน",pl.length-L],["ต้องทบทวนวันนี้",due],["Streak 🔥",streak()+" วัน"],["ความแม่นยำ",ac+"%"]].map(s=>`<div class="card stat"><b>${s[1]}</b><span>${s[0]}</span></div>`).join("")}</div>
+ <div class="card"><h3>📅 วันนี้</h3><p>คำใหม่: <b>${Math.min(S.set.daily,pl.length-L)}</b> · ทบทวน: <b>${due}</b> · เป้าหมายต่อวัน: <b>${S.set.daily}</b> คำ</p>
+ <button class="btn" onclick="go('fc')">▶ เริ่มเรียน</button><button class="btn g" onclick="go('exam')">ทำข้อสอบ</button><button class="btn g" onclick="go('memo')">บันทึกของฉัน</button><button class="btn g" onclick="go('grp')">กลุ่มคำ</button></div>
+ <div class="card"><h3>📈 ความคืบหน้า</h3>
+ <p>HSK 1–2: ${lvP(2)}%</p><div class="bar"><i style="width:${lvP(2)}%"></i></div>
+ <p>HSK 3: ${lvP(3)}%</p><div class="bar"><i style="width:${lvP(3)}%;background:var(--pri)"></i></div>
+ <p>จำได้แม่น (ช่วงทบทวน ≥21 วัน): ${mast}/${pl.length}</p>
+ <h4>กิจกรรม 7 วัน</h4><div style="display:flex;align-items:flex-end;gap:8px;height:120px">${days.map(d=>`<div style="flex:1;text-align:center"><div style="background:var(--pri);border-radius:6px 6px 0 0;height:${d[1]/mx*90}px" title="${d[1]}"></div><div class="mut">${d[0]}</div></div>`).join("")}</div></div>
+ <div class="card"><h3>⚠️ คำที่ยัง ไม่แม่น</h3>${weak.length?weak.map(w=>`<span class="tag" style="font-size:16px">${w.hz} ${w.th} (${Math.round(acc(w)*100)}%)</span>`).join(""):'<p class="mut">ยังไม่มี — เยี่ยมมาก!</p>'}</div>`};
+
+R.vocab=(q="",f="all")=>{const L=pool().filter(w=>{const s=q.toLowerCase();
+ if(s&&![w.hz,w.py,w.th,w.en,w.py.normalize("NFD").replace(/[̀-ͯ]/g,"")].some(x=>x.toLowerCase().includes(s)))return false;
+ return f==="all"||(f==="l"&&learned(w))||(f==="n"&&!learned(w))||(f==="d"&&isDue(w))||(f==="b"&&S.bm[w.id])||(f==="h"&&learned(w)&&acc(w)<.6)||f===w.pos||f===w.grp});
+ const grps=[...new Set(V.map(w=>w.grp))];
+ $("#main").innerHTML=`<h2>📚 คำศัพท์</h2><div class="card"><input id="q" placeholder="ค้นหา: 汉字 / pinyin / ไทย / English" value="${esc(q)}" style="width:60%">
+ <select id="f"><option value="all">ทั้งหมด</option><option value="l">เรียนแล้ว</option><option value="n">ยังไม่เรียน</option><option value="d">ถึงเวลาทบทวน</option><option value="h">คำยาก</option><option value="b">บุ๊กมาร์ก</option>${Object.entries(POS).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}${grps.map(g=>`<option>${g}</option>`).join("")}</select>
+ <span class="mut">${L.length} คำ</span></div>
+ <div class="card"><table><tr><th>汉字</th><th>Pinyin</th><th>ไทย / English</th><th>HSK</th><th>สถานะ</th></tr>${L.map(w=>{const s=status(w);return`<tr onclick="detail(${w.id})" style="cursor:pointer"><td class="hz">${w.hz}</td><td class="py">${w.py}</td><td>${w.th}<div class="mut">${w.en} · ${POS[w.pos]}</div></td><td>${w.lv}</td><td style="color:${s[1]}">${s[0]}${S.bm[w.id]?" ⭐":""}</td></tr>`}).join("")}</table></div>`;
+ $("#f").value=f;const upd=()=>{const p=$("#q").selectionStart;R.vocab($("#q").value,$("#f").value);$("#q").focus();$("#q").setSelectionRange(p,p)};$("#q").oninput=upd;$("#f").onchange=upd};
+
+function detail(id){const w=V[id];
+ $("#main").innerHTML=`<button class="btn g" onclick="go('vocab')">← กลับ</button><div class="card" style="text-align:center"><div class="hz" style="font-size:80px">${w.hz}</div><div class="py" style="font-size:22px">${w.py} ${spk(w.hz)}</div><h3>${w.th}</h3><div class="mut">${w.en} · ${POS[w.pos]} · HSK ${w.lv} · ${w.grp}</div></div>
+ ${wordInfo(w)}`}
+function wordInfo(w){const rel=related(w);
+ return`<div class="card"><h4>📖 ประโยคตัวอย่าง</h4>${exBox(w)}
+ ${w.tip?`<h4>💡 จำง่าย ๆ (Remember This)</h4><p>${w.tip}</p>`:""}
+ ${[...w.hz].length>1?`<p class="mut">แยกตัวอักษร: ${[...w.hz].map(c=>byHz[c]?`${c}=${byHz[c].th}`:c).join(" · ")}</p>`:""}
+ <h4>🔗 คำที่เกี่ยวข้อง</h4>${rel.map(r=>`<span class="tag" style="font-size:15px;cursor:pointer" onclick="detail(${r.id})">${r.hz} ${r.py} – ${r.th}</span>`).join("")||"-"}
+ <h4>📝 บันทึกของฉัน</h4><textarea id="mm" rows="3" style="width:100%" placeholder="เทคนิคจำ, ไวยากรณ์, ประโยคของฉัน...">${esc(S.memo[w.id]||"")}</textarea>
+ <button class="btn" onclick="S.memo[${w.id}]=$('#mm').value;save();this.textContent='บันทึกแล้ว ✓'">บันทึก</button>
+ <button class="btn ${S.bm[w.id]?"w":"g"}" onclick="S.bm[${w.id}]=!S.bm[${w.id}];save();this.textContent=S.bm[${w.id}]?'⭐ บุ๊กมาร์กแล้ว':'☆ บุ๊กมาร์ก'">${S.bm[w.id]?"⭐ บุ๊กมาร์กแล้ว":"☆ บุ๊กมาร์ก"}</button></div>`}
+
+// Flashcards
+let Q=[],qi=0,flip=false;
+R.fc=()=>{const pl=pool(),due=pl.filter(isDue).sort((a,b)=>acc(a)-acc(b)),nw=pl.filter(w=>!learned(w)).slice(0,S.set.daily);
+ Q=shuffle([...due,...nw]);qi=0;
+ if(!Q.length){$("#main").innerHTML=`<div class="card"><h2>🎉 วันนี้ครบแล้ว!</h2><p>ไม่มีคำที่ต้องทบทวน</p><button class="btn" onclick="Q=shuffle(pool());qi=0;card()">ฝึกทั้งหมดอีกรอบ</button></div>`;return}card()};
+function card(){flip=false;if(qi>=Q.length){$("#main").innerHTML=`<div class="card"><h2>✅ จบเซสชัน!</h2><p>ทบทวนไป ${Q.length} คำ</p><button class="btn" onclick="go('dash')">กลับแดชบอร์ด</button><button class="btn g" onclick="go('exam')">ทำแบบทดสอบสั้น</button></div>`;return}
+ const w=Q[qi];$("#main").innerHTML=`<p class="mut">${qi+1}/${Q.length} · Space=พลิก · 1–4=ให้คะแนน · ปัดซ้าย=ยาก ขวา=ง่าย ขึ้น=จำได้</p><div class="bar"><i style="width:${qi/Q.length*100}%"></i></div><br>
+ <div class="card fc" id="fc" onclick="doFlip()"><div class="big hz">${w.hz}</div><div>${spk(w.hz)}</div><button class="btn g" onclick="event.stopPropagation();this.textContent='${w.py[0]}… · ${w.en}'">💡 คำใบ้</button><p class="mut">แตะเพื่อพลิก</p></div><div id="back"></div>`;
+ say(w.hz);swipe($("#fc"))}
+function doFlip(){if(flip)return;flip=true;const w=Q[qi];
+ $("#fc").innerHTML=`<div class="big hz">${w.hz}</div><div class="py" style="font-size:24px">${w.py} ${spk(w.hz)}</div><h2>${w.th}</h2><div class="mut">${w.en} · ${POS[w.pos]}</div>`;
+ $("#back").innerHTML=`<div class="card" style="text-align:center"><button class="btn r" onclick="rate(0)">1 ลืม</button><button class="btn w" onclick="rate(3)">2 ยาก</button><button class="btn" onclick="rate(4)">3 จำได้</button><button class="btn ok" onclick="rate(5)">4 ง่าย</button></div>${wordInfo(w)}`}
+function rate(q){const w=Q[qi];grade(w,q);if(q<3)Q.push(w);qi++;card()}
+function swipe(el){let x0,y0;el.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+ el.addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+ if(Math.max(Math.abs(dx),Math.abs(dy))<60)return;if(Math.abs(dy)>Math.abs(dx)){if(dy<0)rate(5)}else rate(dx>0?4:3)})}
+document.addEventListener("keydown",e=>{if(cur!=="fc"||/INPUT|TEXTAREA/.test(e.target.tagName)||!Q[qi])return;
+ if(e.code==="Space"){e.preventDefault();doFlip()}else if(flip&&"1234".includes(e.key))rate([0,3,4,5]["1234".indexOf(e.key)])});
+
+// Groups
+R.grp=()=>{const grps=[...new Set(V.map(w=>w.grp))];
+ const chars={};V.forEach(w=>[...w.hz].forEach(c=>(chars[c]=chars[c]||[]).push(w)));
+ const cg=Object.entries(chars).filter(e=>e[1].length>=3);
+ const row=w=>`<div onclick="detail(${w.id})" style="cursor:pointer;padding:4px 0"><span class="hz">${w.hz}</span> <span class="py">${w.py}</span> – ${w.th} ${spk(w.hz)}</div>`;
+ $("#main").innerHTML=`<h2>🧩 กลุ่มคำ & ความสัมพันธ์</h2>
+ <h3>A. กลุ่มตามความหมาย</h3><div class="grid">${grps.map(g=>`<div class="card"><b>${g}</b>${V.filter(w=>w.grp===g).map(row).join("")}<button class="btn g" onclick="Q=shuffle(V.filter(w=>w.grp==='${g}'));qi=0;cur='fc';card()">ฝึกกลุ่มนี้</button></div>`).join("")}</div>
+ <h3>B. ตัวอักษรร่วม</h3><div class="grid">${cg.map(([c,ws])=>`<div class="card"><b class="hz">${c}</b>${ws.map(row).join("")}</div>`).join("")}</div>
+ <h3>C. ความหมายคล้ายกัน</h3>${SIM.map(s=>`<div class="card">${s.w.map(h=>row(byHz[h])).join("")}<p>📌 ${s.note}</p></div>`).join("")}
+ <h3>D. คำตรงข้าม</h3><div class="card">${OPP.map(([a,b])=>`<div style="font-size:20px;padding:4px"><span class="hz">${a}</span> ${byHz[a].th} ↔ <span class="hz">${b}</span> ${byHz[b].th}</div>`).join("")}</div>
+ <h3>E. คำที่มักสับสน</h3>${CONF.map(s=>`<div class="card"><h4>${s.w.join(" vs ")}</h4>${s.w.map(h=>row(byHz[h])+exBox(byHz[h])).join("")}<p>📌 ${s.note}</p><p style="color:var(--bad)">${s.err}</p></div>`).join("")}`};
+
+// Memo
+R.memo=()=>{const ws=V.filter(w=>S.memo[w.id]||S.bm[w.id]);
+ $("#main").innerHTML=`<h2>📝 บันทึกของฉัน</h2><p class="mut">เพิ่มบันทึก/บุ๊กมาร์กได้จากหน้ารายละเอียดคำศัพท์หรือแฟลชการ์ด</p>
+ ${ws.length?ws.map(w=>`<div class="card"><span class="hz">${w.hz}</span> <span class="py">${w.py}</span> – ${w.th} ${S.bm[w.id]?"⭐":""}<p style="white-space:pre-wrap">${esc(S.memo[w.id]||"")}</p><button class="btn g" onclick="detail(${w.id})">แก้ไข</button></div>`).join(""):'<div class="card">ยังไม่มีบันทึก</div>'}
+ <button class="btn" onclick="go('vocab')">+ เลือกคำเพื่อเพิ่มบันทึก</button>`};
+
+// Exam
+let E=[],ei=0,score=0,wrong=[];
+const TYPES={mean:"เลือกความหมายที่ถูกต้อง",py:"เลือกพินอินที่ถูกต้อง",word:"เลือกคำศัพท์จีนที่ถูกต้อง",fill:"เติมคำในช่องว่าง",listen:"ฟังแล้วเลือกความหมาย",order:"เรียงคำให้เป็นประโยค"};
+R.exam=()=>{const h=(E.length?`<p class="mut">ผลล่าสุด: ${S.exam.slice(-3).map(x=>x.d+" "+x.s+"%").join(" · ")}</p>`:"");
+ $("#main").innerHTML=`<h2>✍️ ฝึกสอบ HSK</h2><div class="card"><h3>สอบจำลอง</h3><button class="btn" onclick="startExam('2')">HSK 2 (15 ข้อ)</button><button class="btn" onclick="startExam('3')">HSK 3 (15 ข้อ)</button><button class="btn" onclick="startExam('all')">ผสม 2–3 (20 ข้อ)</button></div>
+ <div class="card"><h3>ฝึกเฉพาะประเภท</h3>${Object.entries(TYPES).map(([k,v])=>`<button class="btn g" onclick="startExam('all','${k}')">${v}</button>`).join("")}</div>
+ <div class="card"><h3>ประวัติ</h3>${S.exam.slice(-8).reverse().map(x=>`<div>${x.d} · ${x.n} · <b>${x.s}%</b></div>`).join("")||'<p class="mut">ยังไม่มี</p>'}</div>`};
+function startExam(lv,type){const src=V.filter(w=>lv==="all"||(lv==="2"?w.lv<=2:w.lv===3)),n=type?10:lv==="all"?20:15;
+ E=shuffle(src).slice(0,n).map(w=>mkQ(w,type||shuffle(Object.keys(TYPES))[0],src));ei=0;score=0;wrong=[];E.name=type?TYPES[type]:"Mock HSK "+(lv==="all"?"2–3":lv);showQ()}
+function mkQ(w,t,src){const others=shuffle(src.filter(x=>x!==w)).slice(0,3),opts=shuffle([w,...others]);
+ if(t==="order"){const parts=w.ex.cn.replace(/[。？！，]/g,"").match(new RegExp(`${w.hz}|.{1,2}`,"g"));return{t,w,parts}}
+ return{t,w,opts}}
+function showQ(){if(ei>=E.length)return result();const q=E[ei],w=q.w;let body="";
+ const o=(f)=>q.opts.map((x,i)=>`<button class="opt" onclick="ans(this,${x===w})">${f(x)}</button>`).join("");
+ if(q.t==="mean")body=`<div class="hz" style="font-size:56px">${w.hz}</div>${o(x=>x.th+" ("+x.en+")")}`;
+ if(q.t==="py")body=`<div class="hz" style="font-size:56px">${w.hz}</div>${o(x=>x.py)}`;
+ if(q.t==="word")body=`<h2>${w.th}</h2>${o(x=>`<span class="hz">${x.hz}</span>`)}`;
+ if(q.t==="fill")body=`<div class="hz" style="font-size:26px">${esc(w.ex.cn).split(w.hz).join("＿＿")}</div><div class="mut">${w.ex.th}</div>${o(x=>`<span class="hz">${x.hz}</span> <span class="mut">${x.py}</span>`)}`;
+ if(q.t==="listen"){body=`<button class="btn" onclick="say('${w.hz}')">🔊 ฟังอีกครั้ง</button>${o(x=>x.th)}`;setTimeout(()=>say(w.hz),300)}
+ if(q.t==="order"){q.pick=[];body=`<div class="mut">${w.ex.th}</div><div id="ans" class="card" style="min-height:60px"></div><div id="pool">${shuffle(q.parts.map((p,i)=>[p,i])).map(([p,i])=>`<span class="chip" onclick="pick(this,'${p}')">${p}</span>`).join("")}</div><button class="btn" onclick="chkOrder()">ตรวจ</button><button class="btn g" onclick="showQ()">ล้าง</button>`}
+ $("#main").innerHTML=`<p class="mut">${E.name} · ข้อ ${ei+1}/${E.length} · คะแนน ${score}</p><div class="bar"><i style="width:${ei/E.length*100}%"></i></div><div class="card"><h3>${TYPES[q.t]}</h3>${body}<div id="fb"></div></div>`}
+function pick(el,p){E[ei].pick.push(p);el.remove();$("#ans").innerHTML+=`<span class="chip">${p}</span>`}
+function chkOrder(){const q=E[ei];ans(null,q.pick.join("")===q.parts.join(""))}
+function ans(el,ok){const q=E[ei],w=q.w;document.querySelectorAll(".opt").forEach(b=>b.disabled=true);
+ if(el)el.classList.add(ok?"c":"x");if(ok)score++;else wrong.push(w);
+ const p=P(w.id);ok?p.ok++:p.bad++;logDay(ok?"ok":"bad");save();
+ $("#fb").innerHTML=`<p style="color:${ok?"var(--ok)":"var(--bad)"}"><b>${ok?"✓ ถูกต้อง":"✗ ผิด"}</b> — ${w.hz} (${w.py}) = ${w.th}</p>${exBox(w)}<button class="btn" onclick="ei++;showQ()">ถัดไป →</button>`;
+ if(q.t==="order")$("#pool").innerHTML=""}
+function result(){const pc=Math.round(score/E.length*100);S.exam.push({d:today(),n:E.name,s:pc});save();
+ $("#main").innerHTML=`<div class="card"><h2>ผลสอบ: ${pc}%</h2><p>ถูก ${score} · ผิด ${E.length-score} · ทั้งหมด ${E.length}</p><div class="bar"><i style="width:${pc}%"></i></div></div>
+ <div class="card"><h3>📌 คำที่ควรทบทวน</h3>${wrong.map(w=>`<div onclick="detail(${w.id})" style="cursor:pointer;padding:6px 0"><span class="hz">${w.hz}</span> <span class="py">${w.py}</span> – ${w.th}<div class="mut">${w.tip||w.ex.cn+" / "+w.ex.th}</div></div>`).join("")||"ไม่มี เยี่ยมมาก! 🎉"}
+ ${wrong.length?`<button class="btn w" onclick="Q=[...wrong];qi=0;cur='fc';card()">ทบทวนคำที่ผิดด้วยแฟลชการ์ด</button>`:""}<button class="btn g" onclick="go('exam')">กลับ</button></div>`}
+
+// Settings
+R.set=()=>{$("#main").innerHTML=`<h2>⚙️ ตั้งค่า</h2><div class="card">
+ <p>คำใหม่ต่อวัน: <input id="dly" type="number" min="1" max="50" value="${S.set.daily}" style="width:80px"></p>
+ <p>ระดับ HSK: <select id="lv"><option value="all">HSK 2–3 ทั้งหมด</option><option value="2">HSK 1–2</option><option value="3">HSK 3</option></select></p>
+ <p>ความเร็วเสียง: <input id="rt" type="range" min="0.4" max="1.2" step="0.1" value="${S.set.rate||0.9}"> <button class="btn g" onclick="say('你好，欢迎学习汉语')">ทดสอบเสียง</button></p>
+ <button class="btn" onclick="S.set.daily=+$('#dly').value;S.set.lv=$('#lv').value;S.set.rate=+$('#rt').value;save();this.textContent='บันทึกแล้ว ✓'">บันทึก</button></div>
+ <div class="card"><h3>สำรองข้อมูล</h3><button class="btn g" onclick="dl('hsk-progress.json',JSON.stringify(S))">⬇ Export JSON</button><button class="btn g" onclick="dl('hsk-vocab.csv','hanzi,pinyin,thai,english,hsk\\n'+V.map(w=>[w.hz,w.py,w.th,w.en,w.lv].join(',')).join('\\n'))">⬇ Export คำศัพท์ CSV</button>
+ <label class="btn g">⬆ Import JSON<input type="file" accept=".json" hidden onchange="imp(this)"></label>
+ <button class="btn r" onclick="if(confirm('ลบความคืบหน้าทั้งหมด?')){localStorage.removeItem(KEY);location.reload()}">รีเซ็ต</button>
+ <p class="mut">ข้อมูลเก็บในเบราว์เซอร์ (localStorage) · รายการคำศัพท์เป็นตัวอย่างสำหรับฝึก ควรตรวจสอบกับรายการ HSK ทางการ</p></div>`;$("#lv").value=S.set.lv};
+function dl(n,t){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([t]));a.download=n;a.click()}
+function imp(i){const r=new FileReader();r.onload=()=>{try{S=JSON.parse(r.result);save();alert("นำเข้าสำเร็จ");go("dash")}catch{alert("ไฟล์ไม่ถูกต้อง")}};r.readAsText(i.files[0])}
+
+go("dash");
+</script>
+</body>
+</html>
